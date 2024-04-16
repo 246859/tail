@@ -87,25 +87,24 @@ func TailAt(file *os.File, n int, offset int64) ([]byte, int64, error) {
 		}
 
 		offset--
-		// 如果是windows系统，则需要额外移动偏移量
-		if runtime.GOOS == "windows" { // CRLF
+		// consider CRLF
+		if runtime.GOOS == "windows" {
 			offset--
 		}
 
-		// 最后一行不加换行符
 		if offset >= -size {
 			content = append(content, '\n')
 		}
 		n--
 
-		// 防止seek指针移动到起始位置之外
+		// prevent pointer overflow the head of file
 		if offset < -size {
 			offset = 0
 			break
 		}
 	}
 
-	// 最后再整体反转
+	// reverse entire contents
 	slices.Reverse(content)
 	return content, offset, err
 }
