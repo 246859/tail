@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"runtime"
 	"slices"
 	"unsafe"
 )
@@ -87,9 +86,19 @@ func TailAt(file *os.File, n int, offset int64) ([]byte, int64, error) {
 		}
 
 		offset--
-		// consider CRLF
-		if runtime.GOOS == "windows" {
-			offset--
+
+		if offset >= -size {
+			if _, err := file.Seek(offset, io.SeekEnd); err != nil {
+				return nil, 0, err
+			}
+			// consider CRLF
+			_, err := file.Read(char)
+			if err != nil {
+				return nil, 0, err
+			}
+			if char[0] == '\r' {
+				offset--
+			}
 		}
 
 		if offset >= -size {
